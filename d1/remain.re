@@ -1,5 +1,6 @@
 module JaneStreet = {
   include Core;
+  include Base;
 };
 /* let consume_input_text_line_by_line ~filepath ~consume =
      let rec exhaust channel =
@@ -154,12 +155,12 @@ let load_input = filepath => {
   );
 };
 
+let _ = load_input("./input");
 
 /*  */
-let run = () => {
+let part1 = () => {
   let left = ref([]);
   let right = ref([]);
-  load_input("./input");
   List.iter(
     ls => {
       let hd = List.hd(ls);
@@ -185,5 +186,69 @@ let run = () => {
   print_endline @@ "result: " ++ string_of_int(total_dis^);
 };
 
+let unique = lst => {
+  let sorted = List.sort(compare, lst);
+  let rec dedup = lst =>
+    switch (lst) {
+    | [] => []
+    | [x] => [x]
+    | [x, y, ...rest] =>
+      if (x == y) {
+        dedup([y, ...rest]);
+      } else {
+        [x, ...dedup([y, ...rest])];
+      }
+    };
+
+  dedup(sorted);
+};
+
+module IntMap =
+  Map.Make({
+    type t = int;
+
+    let compare = compare;
+  });
+
+let list_to_map = lst =>
+  List.fold_left((acc, x) => IntMap.add(x, 0, acc), IntMap.empty, lst);
+let update_map_key = (map, key, new_value) =>
+  IntMap.add(key, new_value, map);
+
+let part2 = () => {
+  let left = ref([]);
+  let right = ref([]);
+  List.iter(
+    ls => {
+      let hd = List.hd(ls);
+      let last = List.nth(ls, 1);
+      left := [hd, ...left^];
+      right := [last, ...right^];
+    },
+    all_pairs^,
+  );
+  left := unique(left^);
+  let left_map = ref(list_to_map(left^));
+  let total_dis = ref(0);
+  List.iter(
+    k => {
+      let l =
+        try(IntMap.find(k, left_map^)) {
+        | _ => (-1)
+        };
+
+      if (l === (-1)) {
+        ();
+      } else {
+        left_map := update_map_key(left_map^, k, l + 1);
+      };
+    },
+    right^,
+  );
+  IntMap.iter((i, t) => total_dis := total_dis^ + i * t, left_map^);
+  print_endline @@ "result: " ++ string_of_int(total_dis^);
+};
+
 /*  */
-let _ = run();
+let _ = part1();
+let _ = part2();
