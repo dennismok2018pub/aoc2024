@@ -135,92 +135,63 @@ let consume_input_text_line_by_line ~filepath ~consume =
    ;; *)
 (* todo *)
 
-let extract_numerics_from_line line i =
+let extract_numerics_from_line delitmiter line i =
   print_endline @@ "line#" ^ string_of_int i ^ ":" ^ line;
-  let strs = Str.split (Str.regexp "   ") line in
+  let strs = Str.split (Str.regexp delitmiter) line in
   List.map int_of_string strs
 ;;
 
-let all_pairs = ref []
+let all_lines = ref []
 
 let load_input filepath =
   let count = ref 1 in
   consume_input_text_line_by_line ~filepath ~consume:(fun line ->
-    all_pairs := extract_numerics_from_line line !count :: !all_pairs;
+    all_lines := extract_numerics_from_line " " line !count :: !all_lines;
     count := !count + 1)
 ;;
 
 let _ = load_input "./input"
 
+let check_safe lst =
+  let safe = ref true in
+  let direction = ref [] in
+  let last = ref [] in
+  List.iter
+    (fun t ->
+      if !safe == false
+      then ()
+      else if !last == []
+      then last := t :: []
+      else if !direction == []
+      then (
+        let a = abs (t - List.hd !last) in
+        if a > 3 || a < 1 then safe := false;
+        let cur_dir = compare t (List.hd !last) in
+        direction := cur_dir :: [];
+        last := t :: [];
+        if 0 == List.hd !direction then safe := false)
+      else (
+        let a = abs (t - List.hd !last) in
+        if a > 3 || a < 1 then safe := false;
+        let last_direction = List.hd !direction in
+        let current_direction = compare t (List.hd !last) in
+        last := t :: [];
+        if last_direction != current_direction then safe := false else ()))
+    lst;
+  !safe
+;;
+
 (*  *)
 let part1 () =
-  let left = ref [] in
-  let right = ref [] in
+  let safe_count = ref 0 in
   List.iter
-    (fun ls ->
-      let hd = List.hd ls in
-      let last = List.nth ls 1 in
-      left := hd :: !left;
-      right := last :: !right)
-    !all_pairs;
-  left := List.sort compare !left;
-  right := List.sort compare !right;
-  let total_dis = ref 0 in
-  List.iter
-    (fun _ ->
-      let l = List.hd !left in
-      let r = List.hd !right in
-      total_dis := !total_dis + abs (l - r);
-      left := List.tl !left;
-      right := List.tl !right)
-    (List.init (List.length !left) (fun i -> i));
-  print_endline @@ "result: " ^ string_of_int !total_dis
+    (fun l -> if check_safe l then safe_count := !safe_count + 1 else ())
+    !all_lines;
+  print_endline @@ "result: " ^ string_of_int !safe_count
 ;;
 
-let unique lst =
-  let sorted = List.sort compare lst in
-  let rec dedup lst =
-    match lst with
-    | [] -> []
-    | [ x ] -> [ x ]
-    | x :: y :: rest -> if x = y then dedup (y :: rest) else x :: dedup (y :: rest)
-  in
-  dedup sorted
-;;
 
-module IntMap = Map.Make (struct
-    type t = int
-
-    let compare = compare
-  end)
-
-let list_to_map lst = List.fold_left (fun acc x -> IntMap.add x 0 acc) IntMap.empty lst
-let update_map_key map key new_value = IntMap.add key new_value map
-
-let part2 () =
-  let left = ref [] in
-  let right = ref [] in
-  List.iter
-    (fun ls ->
-      let hd = List.hd ls in
-      let last = List.nth ls 1 in
-      left := hd :: !left;
-      right := last :: !right)
-    !all_pairs;
-  left := unique !left;
-  let left_map = ref (list_to_map !left) in
-  let total_dis = ref 0 in
-  List.iter
-    (fun k ->
-      let l =
-        try IntMap.find k !left_map with
-        | _ -> -1
-      in
-      if l == -1 then () else left_map := update_map_key !left_map k (l + 1))
-    !right;
-  IntMap.iter (fun i t -> total_dis := !total_dis + (i * t)) !left_map;
-  print_endline @@ "result: " ^ string_of_int !total_dis
-;;
+let part2 () = ()
 
 (*  *)
 let _ = part1 ()

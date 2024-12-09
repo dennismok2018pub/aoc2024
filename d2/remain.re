@@ -1,5 +1,6 @@
 module JaneStreet = {
   include Core;
+  include Base;
 };
 /* let consume_input_text_line_by_line ~filepath ~consume =
      let rec exhaust channel =
@@ -135,55 +136,85 @@ let consume_input_text_line_by_line = (~filepath, ~consume) => {
    ;; */
 /* todo */
 
-let extract_numerics_from_line = (line, i) => {
+let extract_numerics_from_line = (delitmiter, line, i) => {
   print_endline @@ "line#" ++ string_of_int(i) ++ ":" ++ line;
-  let strs = Str.split(Str.regexp("   "), line);
+  let strs = Str.split(Str.regexp(delitmiter), line);
   List.map(int_of_string, strs);
 };
 
-let all_pairs = ref([]);
+let all_lines = ref([]);
 
 let load_input = filepath => {
   let count = ref(1);
   consume_input_text_line_by_line(
     ~filepath,
     ~consume=line => {
-      all_pairs := [extract_numerics_from_line(line, count^), ...all_pairs^];
+      all_lines :=
+        [extract_numerics_from_line(" ", line, count^), ...all_lines^];
       count := count^ + 1;
     },
   );
 };
 
+let _ = load_input("./input");
 
-/*  */
-let run = () => {
-  let left = ref([]);
-  let right = ref([]);
-  load_input("./input");
+let check_safe = lst => {
+  let safe = ref(true);
+  let direction = ref([]);
+  let last = ref([]);
   List.iter(
-    ls => {
-      let hd = List.hd(ls);
-      let last = List.nth(ls, 1);
-      left := [hd, ...left^];
-      right := [last, ...right^];
-    },
-    all_pairs^,
+    t =>
+      if (safe^ === false) {
+        ();
+      } else if (last^ === []) {
+        last := [t];
+      } else if (direction^ === []) {
+        let a = abs(t - List.hd(last^));
+        if (a > 3 || a < 1) {
+          safe := false;
+        };
+        let cur_dir = compare(t, List.hd(last^));
+        direction := [cur_dir];
+        last := [t];
+        if (0 === List.hd(direction^)) {
+          safe := false;
+        };
+      } else {
+        let a = abs(t - List.hd(last^));
+        if (a > 3 || a < 1) {
+          safe := false;
+        };
+        let last_direction = List.hd(direction^);
+        let current_direction = compare(t, List.hd(last^));
+        last := [t];
+        if (last_direction !== current_direction) {
+          safe := false;
+        } else {
+          ();
+        };
+      },
+    lst,
   );
-  left := List.sort(compare, left^);
-  right := List.sort(compare, right^);
-  let total_dis = ref(0);
-  List.iter(
-    _ => {
-      let l = List.hd(left^);
-      let r = List.hd(right^);
-      total_dis := total_dis^ + abs(l - r);
-      left := List.tl(left^);
-      right := List.tl(right^);
-    },
-    List.init(List.length(left^), i => i),
-  );
-  print_endline @@ "result: " ++ string_of_int(total_dis^);
+  safe^;
 };
 
 /*  */
-let _ = run();
+let part1 = () => {
+  let safe_count = ref(0);
+  List.iter(
+    l =>
+      if (check_safe(l)) {
+        safe_count := safe_count^ + 1;
+      } else {
+        ();
+      },
+    all_lines^,
+  );
+  print_endline @@ "result: " ++ string_of_int(safe_count^);
+};
+
+let part2 = () => ();
+
+/*  */
+let _ = part1();
+let _ = part2();
