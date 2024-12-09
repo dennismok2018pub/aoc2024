@@ -51,14 +51,40 @@ let part1 () =
   let long_text = List.fold_left (fun acc l -> acc ^ l) "" (List.rev !all_lines) in
   print_endline @@ "long_text: " ^ long_text;
   print_endline @@ "long_text ends";
-  let all_mul = find_pattern (Str.regexp {|mul([0-9][0-9]?[0-9]?,[0-9][0-9]?[0-9]?)|}) long_text in
+  let all_mul =
+    find_pattern (Str.regexp {|mul([0-9][0-9]?[0-9]?,[0-9][0-9]?[0-9]?)|}) long_text
+  in
   List.iter (fun mul -> print_endline @@ "mul: " ^ mul) all_mul;
   let all_products = List.map (fun m -> get_product m) all_mul in
   let sum_of_all_products = List.fold_left (fun acc p -> acc + p) 0 all_products in
   print_endline @@ "result: " ^ string_of_int sum_of_all_products
 ;;
 
-let part2 () = ()
+let part2 () =
+  let long_text = List.fold_left (fun acc l -> acc ^ l) "" (List.rev !all_lines) in
+  let instructions =
+    find_pattern
+      (Str.regexp {|mul([0-9][0-9]?[0-9]?,[0-9][0-9]?[0-9]?)\|do()\|don't()|})
+      long_text
+  in
+  List.iter (fun i -> print_endline @@ "instruction: " ^ i) instructions;
+  let state = ref true in
+  let all_products =
+    List.map
+      (fun s ->
+        match s with
+        | "do()" ->
+          state := true;
+          0
+        | "don't()" ->
+          state := false;
+          0
+        | m -> if !state then get_product m else 0)
+      instructions
+  in
+  let sum_of_all_products = List.fold_left (fun acc p -> acc + p) 0 all_products in
+  print_endline @@ "result: " ^ string_of_int sum_of_all_products
+;;
 
 (*  *)
 let _ = part1 ()

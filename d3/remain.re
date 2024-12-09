@@ -64,6 +64,7 @@ let part1 = () => {
       Str.regexp({|mul([0-9][0-9]?[0-9]?,[0-9][0-9]?[0-9]?)|}),
       long_text,
     );
+
   List.iter(mul => print_endline @@ "mul: " ++ mul, all_mul);
   let all_products = List.map(m => get_product(m), all_mul);
   let sum_of_all_products =
@@ -71,7 +72,41 @@ let part1 = () => {
   print_endline @@ "result: " ++ string_of_int(sum_of_all_products);
 };
 
-let part2 = () => ();
+let part2 = () => {
+  let long_text =
+    List.fold_left((acc, l) => acc ++ l, "", List.rev(all_lines^));
+  let instructions =
+    find_pattern(
+      Str.regexp({|mul([0-9][0-9]?[0-9]?,[0-9][0-9]?[0-9]?)\|do()\|don't()|}),
+      long_text,
+    );
+
+  List.iter(i => print_endline @@ "instruction: " ++ i, instructions);
+  let state = ref(true);
+  let all_products =
+    List.map(
+      s =>
+        switch (s) {
+        | "do()" =>
+          state := true;
+          0;
+        | "don't()" =>
+          state := false;
+          0;
+        | m =>
+          if (state^) {
+            get_product(m);
+          } else {
+            0;
+          }
+        },
+      instructions,
+    );
+
+  let sum_of_all_products =
+    List.fold_left((acc, p) => acc + p, 0, all_products);
+  print_endline @@ "result: " ++ string_of_int(sum_of_all_products);
+};
 
 /*  */
 let _ = part1();
