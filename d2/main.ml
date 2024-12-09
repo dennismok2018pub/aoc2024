@@ -181,6 +181,20 @@ let check_safe lst =
   !safe
 ;;
 
+let check_safe2 lst =
+  let five_list = List.mapi (fun i _ -> List.filteri (fun ii _ -> i != ii) lst) lst in
+  let any_safe =
+    List.fold_left
+      (fun acc l ->
+        match acc with
+        | true -> true
+        | _ -> check_safe l)
+      false
+      five_list
+  in
+  any_safe
+;;
+
 (*  *)
 let part1 () =
   let safe_count = ref 0 in
@@ -190,8 +204,13 @@ let part1 () =
   print_endline @@ "result: " ^ string_of_int !safe_count
 ;;
 
-
-let part2 () = ()
+let part2 () =
+  let safe_count = ref 0 in
+  List.iter
+    (fun l -> if check_safe2 l then safe_count := !safe_count + 1 else ())
+    !all_lines;
+  print_endline @@ "result: " ^ string_of_int !safe_count
+;;
 
 (*  *)
 let _ = part1 ()

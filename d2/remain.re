@@ -198,6 +198,23 @@ let check_safe = lst => {
   safe^;
 };
 
+let check_safe2 = lst => {
+  let five_list =
+    List.mapi((i, _) => List.filteri((ii, _) => i !== ii, lst), lst);
+  let any_safe =
+    List.fold_left(
+      (acc, l) =>
+        switch (acc) {
+        | true => true
+        | _ => check_safe(l)
+        },
+      false,
+      five_list,
+    );
+
+  any_safe;
+};
+
 /*  */
 let part1 = () => {
   let safe_count = ref(0);
@@ -213,7 +230,19 @@ let part1 = () => {
   print_endline @@ "result: " ++ string_of_int(safe_count^);
 };
 
-let part2 = () => ();
+let part2 = () => {
+  let safe_count = ref(0);
+  List.iter(
+    l =>
+      if (check_safe2(l)) {
+        safe_count := safe_count^ + 1;
+      } else {
+        ();
+      },
+    all_lines^,
+  );
+  print_endline @@ "result: " ++ string_of_int(safe_count^);
+};
 
 /*  */
 let _ = part1();
