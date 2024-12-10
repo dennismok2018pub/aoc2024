@@ -37,6 +37,7 @@ let valid_4 = [
   [(0, 3), (1, 2), (2, 1), (3, 0)],
 ];
 
+let valid_2 = [[(0, 0), (1, 1), (2, 2)], [(2, 0), (1, 1), (0, 2)]];
 let get_x = ((x, _y)) => x;
 let get_y = ((_x, y)) => y;
 
@@ -96,12 +97,45 @@ let get4len_str_from_4indexes = (lst_lst, indexes, cur_pos) => {
   String.of_seq(List.to_seq([char1, char2, char3, char4]));
 };
 
+let get3len_strs = (str_lst, indexes_list, cur_pos) =>
+  List.map(
+    indexes =>
+      String.of_seq @@
+      List.to_seq @@
+      List.map(
+        index =>
+          try(
+            List.nth(
+              List.of_seq @@
+              String.to_seq @@
+              List.nth(str_lst, get_x(cur_pos) + (get_x @@ index)),
+            ) @@
+            get_y(cur_pos)
+            + (get_y @@ index)
+          ) {
+          | _ => ' '
+          },
+        indexes,
+      ),
+    indexes_list,
+  );
+
 let find_xmas = str =>
   switch (str) {
   | "XMAS" => 1
   | "SAMX" => 1
   | _ => 0
   };
+
+let find_sam = str =>
+  switch (str) {
+  | "SAM" => 1
+  | "MAS" => 1
+  | _ => 0
+  };
+
+let find_x_mas = lines_of_2 =>
+  List.fold_left((acc, l) => acc * find_sam(l), 1, lines_of_2);
 
 /*  */
 let part1 = () => {
@@ -131,6 +165,19 @@ let part1 = () => {
 
 let part2 = () => {
   let count = ref(0);
+  List.iteri(
+    (x, l) =>
+      List.iteri(
+        (y, _) => {
+          let cur_pos = (x, y);
+          let lines_of_2 = get3len_strs(all_lines^, valid_2, cur_pos);
+          let local = find_x_mas(lines_of_2);
+          count := count^ + local;
+        },
+        List.of_seq @@ String.to_seq(l),
+      ),
+    all_lines^,
+  );
   print_endline @@ "result: " ++ string_of_int(count^);
 };
 
